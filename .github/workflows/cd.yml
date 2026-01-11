@@ -407,11 +407,11 @@ jobs:
           tags: |
             ${{ steps.repouri.outputs.repo_uri }}:${{ steps.vars.outputs.sha }}
             ${{ steps.repouri.outputs.repo_uri }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             APP_VERSION=${{ steps.vars.outputs.sha }}
             APP_BUILD_TIME=${{ github.run_id }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Start ASG Instance Refresh (roll out newest image)
         working-directory: infra
