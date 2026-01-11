@@ -2,6 +2,9 @@
 FROM public.ecr.aws/docker/library/python:3.11-slim
 WORKDIR /app
 
+ARG APP_VERSION=dev
+ARG APP_BUILD_TIME=unknown
+
 ENV PYTHONDONTWRITEBYTECODE 1 \
     PYTHONUNBUFFERED 1
 

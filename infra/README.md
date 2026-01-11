@@ -1,33 +1,54 @@
+# Infrastructure (Terraform)
 
-# Terraform IaC — AWS ECS Fargate + ALB + RDS (us-east-1)
+## Overview
+Terraform provisions the AWS infrastructure needed to run the application using an **EC2 Auto Scaling Group (ASG)** behind an **Application Load Balancer (ALB)**. Container images are stored in **Amazon ECR**. An optional **RDS PostgreSQL** database can be enabled.
 
-This stack provisions a simple production-like environment for the cafe Flask app:
+Region: **eu-north-1**
 
-- VPC (public subnets for ALB & ECS tasks, private subnets for RDS)
-- Security groups (ALB → ECS → RDS)
-- ECR repository
-- ECS cluster, task definition, service (awsvpc with public IPs)
-- Application Load Balancer (HTTP 80)
-- RDS PostgreSQL (db.t3.micro by default)
-- SSM Parameter (SecureString) storing `DATABASE_URL` for the app
-- Optional IAM OIDC role for GitHub Actions to assume (recommended)
+---
 
-## Usage (local Terraform)
+## Components created
+- VPC, subnets, routing (module)
+- Security groups (ALB + EC2 + optional RDS)
+- Application Load Balancer (ALB)
+- Launch Template + Auto Scaling Group (EC2 instances running Docker)
+- ECR repository for container images
+- Optional RDS PostgreSQL (when enabled in tfvars)
+- Terraform state backend:
+  - S3 bucket for state
+  - DynamoDB table for state lock
+
+---
+
+## Variables
+Infrastructure configuration is driven by `env/dev.tfvars`.
+
+Key values include (examples):
+- `project_name`
+- `enable_rds`
+- `image_tag` (passed from CD pipeline; typically commit SHA)
+
+---
+
+## Remote state backend
+Terraform uses an S3 bucket backend with DynamoDB locking. The CI/CD pipeline ensures the backend exists before running Terraform, then writes `infra/backend.hcl` (not committed) and runs:
+
+- `terraform init -backend-config=backend.hcl`
+
+---
+
+## Deployment model
+- The pipeline builds a Docker image and pushes it to ECR.
+- Terraform config references `image_tag` to define which image EC2 instances should run.
+- After deployment, the pipeline starts an **ASG Instance Refresh** to roll out the new image version.
+
+---
+
+## How to run locally (optional)
+From `infra/`:
 
 ```bash
-cd infra
-terraform init
-terraform apply -var-file=env/dev.tfvars
-```
-
-Outputs will show ALB URL to access the app.
-
-## GitHub Actions — CD
-The repository can be wired with `.github/workflows/cd.yml` to:
-- Run tests
-- Build & push image to ECR
-- Assume IAM role via OIDC
-- `terraform plan` / `apply` (using `TF_VAR_image_tag`)
-
-See `docs/bootstrap-oidc.md` for first-time setup notes.
+terraform init -backend-config=backend.hcl
+terraform plan -var-file=env/dev.tfvars -var="image_tag=local"
+terraform apply -var-file=env/dev.tfvars -var="image_tag=local"
 

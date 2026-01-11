@@ -37,5 +37,13 @@ def create_app():
     def index():
         from flask import redirect, url_for
         return redirect(url_for("cashier.cashier"))
+    
+    @app.context_processor
+    def inject_build_info():
+        import os
+        return {
+            "app_version": os.getenv("APP_VERSION", "dev"),
+            "app_build_time": os.getenv("APP_BUILD_TIME", ""),
+        }
 
     return app

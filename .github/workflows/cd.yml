@@ -146,6 +146,9 @@ jobs:
           push: true
           tags: |
             ${{ steps.prepush.outputs.repo_uri }}:${{ steps.vars.outputs.sha }}
+          build-args: |
+            APP_VERSION=${{ steps.vars.outputs.sha }}
+            APP_BUILD_TIME=${{ github.run_id }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -404,6 +407,9 @@ jobs:
           tags: |
             ${{ steps.repouri.outputs.repo_uri }}:${{ steps.vars.outputs.sha }}
             ${{ steps.repouri.outputs.repo_uri }}:latest
+          build-args: |
+            APP_VERSION=${{ steps.vars.outputs.sha }}
+            APP_BUILD_TIME=${{ github.run_id }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
