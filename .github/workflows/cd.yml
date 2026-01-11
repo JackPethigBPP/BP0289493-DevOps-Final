@@ -1,7 +1,9 @@
 name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows: [ "CI" ]
+    types: [ completed ]
     branches: [ "main" ]
     paths-ignore:
       - 'infra/backend.hcl'
@@ -22,8 +24,8 @@ env:
 
 jobs:
   build-test-push-and-deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 60
-    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
 
     steps:
