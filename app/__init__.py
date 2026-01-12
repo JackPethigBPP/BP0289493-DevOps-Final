@@ -45,5 +45,13 @@ def create_app():
             "app_version": os.getenv("APP_VERSION", "dev"),
             "app_build_time": os.getenv("APP_BUILD_TIME", ""),
         }
+    
+    @app.get("/version")
+    def version():
+        import os
+        return {
+            "APP_VERSION": os.getenv("APP_VERSION", "dev"),
+            "APP_BUILD_TIME": os.getenv("APP_BUILD_TIME", ""),
+        }, 200
 
     return app
