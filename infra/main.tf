@@ -190,6 +190,7 @@ locals {
 
     # Build env flags (only include DATABASE_URL if present)
     ENV_ARGS="-e PORT=$${CONTAINER_PORT} -e FLASK_ENV=production -e FLASK_DEBUG=0"
+    ENV_ARGS="$ENV_ARGS -e APP_VERSION=${var.image_tag} -e APP_BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     if [ -n "$DATABASE_URL" ] && [ "$DATABASE_URL" != "None" ]; then
       ENV_ARGS="$ENV_ARGS -e DATABASE_URL=$DATABASE_URL"
     fi
