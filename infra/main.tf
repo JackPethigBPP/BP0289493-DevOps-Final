@@ -17,7 +17,7 @@ provider "aws" {
   region = var.region
 }
 
-# VPC, subnets, SGs
+#Virtual Private Cloud
 module "vpc" {
   source               = "./modules/vpc"
   project_name         = var.project_name
@@ -26,7 +26,7 @@ module "vpc" {
   private_subnet_cidrs = var.private_subnet_cidrs
 }
 
-# ECR repo for app images
+# ECR repo for application images
 module "ecr" {
   source       = "./modules/ecr"
   project_name = var.project_name
@@ -48,6 +48,7 @@ module "rds" {
   sg_ecs_id            = aws_security_group.app.id
 }
 
+#RDS Security Group
 resource "aws_security_group" "rds" {
   name   = "${var.project_name}-rds-sg"
   vpc_id = module.vpc.vpc_id
@@ -71,11 +72,7 @@ module "alb" {
   container_port    = var.container_port
 }
 
-########################################
-# EC2 App Tier (Launch Template + ASG) #
-########################################
-
-# App security group: allow 80 only from ALB SG
+# App Security Group: allow 80 only from ALB SG
 resource "aws_security_group" "app" {
   name   = "${var.project_name}-app-sg"
   vpc_id = module.vpc.vpc_id
@@ -115,6 +112,7 @@ data "aws_ami" "amazon_linux2" {
   }
 }
 
+#SSM Parameter
 resource "aws_ssm_parameter" "database_url" {
   count = var.enable_rds ? 1 : 0
 
@@ -214,7 +212,7 @@ locals {
 }
 
 
-# Launch template (attach LabInstanceProfile -> LabRole)
+# Launch template
 resource "aws_launch_template" "app" {
   name_prefix   = "${var.project_name}-lt-"
   image_id      = data.aws_ami.amazon_linux2.id
